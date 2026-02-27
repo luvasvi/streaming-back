@@ -10,7 +10,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/movies")
-@CrossOrigin(origins = "http://localhost:4200")
+// Alterado para permitir que qualquer origem (como a Vercel) acesse sua API
+@CrossOrigin(origins = "*") 
 public class MovieController {
 
     private final MovieService movieService;
@@ -69,12 +70,12 @@ public class MovieController {
     public List<MovieDTO> getByGenre(
             @PathVariable Integer id, 
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "popularity.desc") String sortBy) { // NOVO PARÂMETRO
+            @RequestParam(defaultValue = "popularity.desc") String sortBy) { 
         return movieService.getMoviesByGenre(id, page, sortBy);
     }
     
     @GetMapping("/series/{id}/season/{number}")
-public SeasonDetailsDTO getSeasonDetails(@PathVariable Long id, @PathVariable Integer number) {
-    return movieService.getSeasonEpisodes(id, number);
-}
+    public SeasonDetailsDTO getSeasonDetails(@PathVariable Long id, @PathVariable Integer number) {
+        return movieService.getSeasonEpisodes(id, number);
+    }
 }
