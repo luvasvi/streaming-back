@@ -49,6 +49,12 @@ public class MovieDTO {
     @JsonProperty("created_by")
     private List<CastMemberDTO> createdBy;
 
+    // --- NOVOS CAMPOS PARA SÉRIES (O QUE FALTAVA) ---
+    @JsonProperty("number_of_seasons")
+    private Integer numberOfSeasons;
+
+    private List<SeasonDTO> seasons;
+
     public String getDisplayName() {
         return (title != null && !title.isEmpty()) ? title : name;
     }

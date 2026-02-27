@@ -3,6 +3,7 @@ package streaming.controller;
 import org.springframework.web.bind.annotation.*;
 import streaming.dto.MovieDTO;
 import streaming.dto.MovieDetailsDTO;
+import streaming.dto.SeasonDetailsDTO;
 import streaming.service.MovieService;
 
 import java.util.List;
@@ -62,12 +63,18 @@ public class MovieController {
     }
 
     /**
-     * Busca obras por gênero com suporte a Infinite Scroll.
+     * Busca obras por gênero com suporte a Infinite Scroll e ORDENAÇÃO.
      */
     @GetMapping("/genre/{id}")
     public List<MovieDTO> getByGenre(
             @PathVariable Integer id, 
-            @RequestParam(defaultValue = "1") int page) {
-        return movieService.getMoviesByGenre(id, page);
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "popularity.desc") String sortBy) { // NOVO PARÂMETRO
+        return movieService.getMoviesByGenre(id, page, sortBy);
     }
+    
+    @GetMapping("/series/{id}/season/{number}")
+public SeasonDetailsDTO getSeasonDetails(@PathVariable Long id, @PathVariable Integer number) {
+    return movieService.getSeasonEpisodes(id, number);
+}
 }

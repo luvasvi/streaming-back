@@ -36,4 +36,10 @@ public class MovieDetailsDTO {
 
     private String trailerKey;    // ID do vídeo do YouTube
     private List<MovieDTO> recommendations; // Filmes semelhantes
+
+    // --- NOVOS CAMPOS PARA SÉRIES (TEMPORADAS) ---
+    @JsonProperty("number_of_seasons")
+    private Integer numberOfSeasons;
+
+    private List<SeasonDTO> seasons;
 }

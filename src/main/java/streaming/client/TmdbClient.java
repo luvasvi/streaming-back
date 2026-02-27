@@ -16,9 +16,8 @@ public class TmdbClient {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // --- BUSCAS DE HOME ---
+    // ... (Mantenha todos os seus métodos de busca de Home, Busca, Créditos e Trailers iguais)
 
-    // Adicionado parâmetro 'page' para carregar mais tendências
     public MovieResponseDTO getTrending(int page) {
         String url = apiUrl + "/trending/all/day?api_key=" + apiKey + "&language=pt-BR&page=" + page;
         return restTemplate.getForObject(url, MovieResponseDTO.class);
@@ -29,21 +28,16 @@ public class TmdbClient {
         return restTemplate.getForObject(url, MovieResponseDTO.class);
     }
 
-    // --- BUSCAS EXISTENTES COM PAGINAÇÃO ---
-
     public MovieResponseDTO searchMulti(String query, int page) {
         String url = apiUrl + "/search/multi?api_key=" + apiKey + "&query=" + query + "&language=pt-BR&page=" + page;
         return restTemplate.getForObject(url, MovieResponseDTO.class);
     }
 
-    // AQUI ESTÁ A BUSCA POR GÊNERO ATUALIZADA
-    public MovieResponseDTO getMoviesByGenre(Integer genreId, int page) {
+    public MovieResponseDTO getMoviesByGenre(Integer genreId, int page, String sortBy) {
         String url = apiUrl + "/discover/movie?api_key=" + apiKey + "&with_genres=" + genreId + 
-                     "&language=pt-BR&sort_by=popularity.desc&page=" + page;
+                     "&language=pt-BR&sort_by=" + sortBy + "&page=" + page;
         return restTemplate.getForObject(url, MovieResponseDTO.class);
     }
-
-    // --- MÉTODOS DE CRÉDITOS E PESSOAS ---
 
     public MovieResponseDTO searchPerson(String name) {
         String url = apiUrl + "/search/person?api_key=" + apiKey + "&query=" + name + "&language=pt-BR";
@@ -76,11 +70,9 @@ public class TmdbClient {
     }
 
     public MovieDTO getTvDetails(Long seriesId) {
-    String url = apiUrl + "/tv/" + seriesId + "?api_key=" + apiKey + "&language=pt-BR";
-    return restTemplate.getForObject(url, MovieDTO.class);
+        String url = apiUrl + "/tv/" + seriesId + "?api_key=" + apiKey + "&language=pt-BR";
+        return restTemplate.getForObject(url, MovieDTO.class);
     }
-
-    // --- TRAILERS E RECOMENDAÇÕES ---
 
     public VideoResponseDTO getMovieVideos(Long movieId) {
         String url = apiUrl + "/movie/" + movieId + "/videos?api_key=" + apiKey + "&language=pt-BR";
@@ -111,9 +103,15 @@ public class TmdbClient {
         String url = apiUrl + "/tv/" + seriesId + "/videos?api_key=" + apiKey + "&language=en-US";
         return restTemplate.getForObject(url, VideoResponseDTO.class);
     }
-    public MovieDTO getMovieDetails(Long movieId) {
-    String url = apiUrl + "/movie/" + movieId + "?api_key=" + apiKey + "&language=pt-BR";
-    return restTemplate.getForObject(url, MovieDTO.class);
-}
-}
 
+    public MovieDTO getMovieDetails(Long movieId) {
+        String url = apiUrl + "/movie/" + movieId + "?api_key=" + apiKey + "&language=pt-BR";
+        return restTemplate.getForObject(url, MovieDTO.class);
+    }
+
+    // --- NOVO: BUSCA DETALHES DA TEMPORADA (EPISÓDIOS) ---
+    public SeasonDetailsDTO getSeasonDetails(Long seriesId, Integer seasonNumber) {
+        String url = apiUrl + "/tv/" + seriesId + "/season/" + seasonNumber + "?api_key=" + apiKey + "&language=pt-BR";
+        return restTemplate.getForObject(url, SeasonDetailsDTO.class);
+    }
+}

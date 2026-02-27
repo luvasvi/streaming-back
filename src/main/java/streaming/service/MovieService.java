@@ -82,12 +82,15 @@ public class MovieService {
         Long movieId = basicMovie.getId();
         String mediaType = basicMovie.getMediaType();
         
-        // Variáveis de suporte
         String directorName = "Não informado";
         String tagline = null;
         Integer runtime = null;
         Long budget = 0L;
         Long revenue = 0L;
+
+        // NOVAS VARIÁVEIS PARA SÉRIES
+        Integer numberOfSeasons = null;
+        List<SeasonDTO> seasons = null;
 
         CreditsResponseDTO credits;
         WatchProvidersResponseDTO providers;
@@ -100,10 +103,14 @@ public class MovieService {
             videoResponse = tmdbClient.getTvVideos(movieId);
             recommendationsResponse = tmdbClient.getTvRecommendations(movieId);
             
-            // CHAMADA DE DETALHES DA TV (Para pegar Tagline e Criador)
             MovieDTO tvDetails = tmdbClient.getTvDetails(movieId);
             if (tvDetails != null) {
                 tagline = tvDetails.getTagline();
+                
+                // --- ATUALIZAÇÃO: CAPTURANDO DADOS DE TEMPORADA ---
+                numberOfSeasons = tvDetails.getNumberOfSeasons();
+                seasons = tvDetails.getSeasons();
+
                 if (tvDetails.getCreatedBy() != null && !tvDetails.getCreatedBy().isEmpty()) {
                     directorName = tvDetails.getCreatedBy().get(0).getName();
                 }
@@ -114,8 +121,6 @@ public class MovieService {
             videoResponse = tmdbClient.getMovieVideos(movieId);
             recommendationsResponse = tmdbClient.getMovieRecommendations(movieId);
             
-            // --- AQUI ESTÁ A CORREÇÃO PARA FILMES ---
-            // Fazemos uma chamada extra para pegar os detalhes que não vêm na busca
             MovieDTO movieDetails = tmdbClient.getMovieDetails(movieId);
             if (movieDetails != null) {
                 tagline = movieDetails.getTagline();
@@ -161,13 +166,16 @@ public class MovieService {
         details.setCast(credits != null ? credits.getCast() : List.of());
         details.setWatchProviders(providers != null && providers.getResults() != null ? providers.getResults().get("BR") : null);
         
-        // --- SETANDO OS DADOS QUE AGORA NÃO SERÃO MAIS NULL ---
         details.setTagline(tagline);
         details.setRuntime(runtime);
         details.setBudget(budget);
         details.setRevenue(revenue);
         details.setTrailerKey(trailerKey);
         details.setRecommendations(recommendations);
+
+        // --- ATUALIZAÇÃO: ENVIANDO PARA O FRONT ---
+        details.setNumberOfSeasons(numberOfSeasons);
+        details.setSeasons(seasons);
 
         return details;
     }
@@ -183,12 +191,16 @@ public class MovieService {
         return null;
     }
 
-    public List<MovieDTO> getMoviesByGenre(Integer genreId, int page) {
-        MovieResponseDTO response = tmdbClient.getMoviesByGenre(genreId, page);
+    public List<MovieDTO> getMoviesByGenre(Integer genreId, int page, String sortBy) {
+        MovieResponseDTO response = tmdbClient.getMoviesByGenre(genreId, page, sortBy);
         if (response.getResults() == null) return List.of();
 
         return response.getResults().stream()
                 .filter(item -> item.getPosterPath() != null)
                 .collect(Collectors.toList());
     }
+
+    public SeasonDetailsDTO getSeasonEpisodes(Long seriesId, Integer seasonNumber) {
+    return tmdbClient.getSeasonDetails(seriesId, seasonNumber);
+}
 }
