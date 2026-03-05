@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/movies")
-// Alterado para permitir que qualquer origem (como a Vercel) acesse sua API
 @CrossOrigin(origins = "*") 
 public class MovieController {
 
@@ -20,26 +19,16 @@ public class MovieController {
         this.movieService = movieService;
     }
 
-    /**
-     * Retorna os filmes/séries que estão bombando (Trending).
-     * Agora aceita parâmetro de página.
-     */
     @GetMapping("/trending")
     public List<MovieDTO> getTrending(@RequestParam(defaultValue = "1") int page) {
         return movieService.getTrendingMovies(page);
     }
 
-    /**
-     * Retorna os atores e atrizes mais populares do momento.
-     */
     @GetMapping("/popular-people")
     public List<MovieDTO> getPopularPeople() {
         return movieService.getPopularPeople();
     }
 
-    /**
-     * Busca multi-uso (filmes, séries). Suporta paginação.
-     */
     @GetMapping("/search/{title}")
     public List<MovieDTO> getMovies(
             @PathVariable String title, 
@@ -48,24 +37,22 @@ public class MovieController {
     }
 
     /**
-     * Detalhes completos de uma obra.
+     * ATUALIZADO: Agora recebe o TIPO (movie/tv) e o ID direto do Angular.
+     * Isso resolve o erro de trocar o anime de One Piece pela série.
      */
-    @GetMapping("/details/{title}")
-    public MovieDetailsDTO getMovieDetails(@PathVariable String title) {
-        return movieService.getFullMovieDetails(title);
+    @GetMapping("/details/{type}/{id}")
+    public MovieDetailsDTO getMovieDetails(
+            @PathVariable String type, 
+            @PathVariable String id) {
+        // Agora o service deve buscar exatamente por ID e Tipo
+        return movieService.getFullMovieDetailsById(type, id);
     }
 
-    /**
-     * Busca obras por nome de artista.
-     */
     @GetMapping("/person/{name}")
     public List<MovieDTO> getMoviesByPerson(@PathVariable String name) {
         return movieService.searchByPerson(name);
     }
 
-    /**
-     * Busca obras por gênero com suporte a Infinite Scroll e ORDENAÇÃO.
-     */
     @GetMapping("/genre/{id}")
     public List<MovieDTO> getByGenre(
             @PathVariable Integer id, 

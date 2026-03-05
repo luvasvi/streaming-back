@@ -69,26 +69,15 @@ public class MovieService {
             .collect(Collectors.toList());
     }
 
-    public MovieDetailsDTO getFullMovieDetails(String title) {
-        MovieResponseDTO searchResult = tmdbClient.searchMulti(title, 1);
-        if (searchResult.getResults() == null || searchResult.getResults().isEmpty()) {
-            throw new MovieNotFoundException("Título não encontrado.");
-        }
 
-        MovieDTO basicMovie = searchResult.getResults().stream()
-            .filter(item -> !"person".equals(item.getMediaType()))  
-            .findFirst().orElse(searchResult.getResults().get(0));
-
-        Long movieId = basicMovie.getId();
-        String mediaType = basicMovie.getMediaType();
+    public MovieDetailsDTO getFullMovieDetailsById(String mediaType, String idStr) {
+        Long movieId = Long.parseLong(idStr);
         
         String directorName = "Não informado";
         String tagline = null;
         Integer runtime = null;
         Long budget = 0L;
         Long revenue = 0L;
-
-        // NOVAS VARIÁVEIS PARA SÉRIES
         Integer numberOfSeasons = null;
         List<SeasonDTO> seasons = null;
 
@@ -96,37 +85,36 @@ public class MovieService {
         WatchProvidersResponseDTO providers;
         VideoResponseDTO videoResponse;
         MovieResponseDTO recommendationsResponse;
+        MovieDTO basicDetails;
 
+        // Busca os detalhes baseados no tipo enviado pelo Angular
         if ("tv".equals(mediaType)) {
+            basicDetails = tmdbClient.getTvDetails(movieId);
             credits = tmdbClient.getTvCredits(movieId);
             providers = tmdbClient.getTvWatchProviders(movieId);
             videoResponse = tmdbClient.getTvVideos(movieId);
             recommendationsResponse = tmdbClient.getTvRecommendations(movieId);
             
-            MovieDTO tvDetails = tmdbClient.getTvDetails(movieId);
-            if (tvDetails != null) {
-                tagline = tvDetails.getTagline();
-                
-                // --- ATUALIZAÇÃO: CAPTURANDO DADOS DE TEMPORADA ---
-                numberOfSeasons = tvDetails.getNumberOfSeasons();
-                seasons = tvDetails.getSeasons();
-
-                if (tvDetails.getCreatedBy() != null && !tvDetails.getCreatedBy().isEmpty()) {
-                    directorName = tvDetails.getCreatedBy().get(0).getName();
+            if (basicDetails != null) {
+                tagline = basicDetails.getTagline();
+                numberOfSeasons = basicDetails.getNumberOfSeasons();
+                seasons = basicDetails.getSeasons();
+                if (basicDetails.getCreatedBy() != null && !basicDetails.getCreatedBy().isEmpty()) {
+                    directorName = basicDetails.getCreatedBy().get(0).getName();
                 }
             }
         } else {
+            basicDetails = tmdbClient.getMovieDetails(movieId);
             credits = tmdbClient.getCredits(movieId);
             providers = tmdbClient.getWatchProviders(movieId);
             videoResponse = tmdbClient.getMovieVideos(movieId);
             recommendationsResponse = tmdbClient.getMovieRecommendations(movieId);
             
-            MovieDTO movieDetails = tmdbClient.getMovieDetails(movieId);
-            if (movieDetails != null) {
-                tagline = movieDetails.getTagline();
-                runtime = movieDetails.getRuntime();
-                budget = movieDetails.getBudget();
-                revenue = movieDetails.getRevenue();
+            if (basicDetails != null) {
+                tagline = basicDetails.getTagline();
+                runtime = basicDetails.getRuntime();
+                budget = basicDetails.getBudget();
+                revenue = basicDetails.getRevenue();
             }
             
             if (credits != null && credits.getCrew() != null) {
@@ -139,6 +127,9 @@ public class MovieService {
             }
         }
 
+        if (basicDetails == null) throw new MovieNotFoundException("Obra não encontrada.");
+
+        // Lógica de Trailer (PT-BR ou EN)
         String trailerKey = extrairTrailerKey(videoResponse);
         if (trailerKey == null) {
             VideoResponseDTO videoResponseEn = "tv".equals(mediaType) ? 
@@ -146,34 +137,30 @@ public class MovieService {
             trailerKey = extrairTrailerKey(videoResponseEn);
         }
 
-        List<MovieDTO> recommendations = List.of();
-        if (recommendationsResponse != null && recommendationsResponse.getResults() != null) {
-            recommendations = recommendationsResponse.getResults().stream()
+        // Recomendações
+        List<MovieDTO> recommendations = (recommendationsResponse != null && recommendationsResponse.getResults() != null) ?
+            recommendationsResponse.getResults().stream()
                 .filter(item -> item.getPosterPath() != null)
-                .limit(10)
-                .collect(Collectors.toList());
-        }
+                .limit(10).collect(Collectors.toList()) : List.of();
 
+        // Montagem do DTO de retorno
         MovieDetailsDTO details = new MovieDetailsDTO();
-        details.setId(basicMovie.getId());
-        details.setTitle(basicMovie.getDisplayName());
-        details.setOverview(basicMovie.getOverview());
-        details.setPosterPath(basicMovie.getPosterPath());
-        details.setVoteAverage(basicMovie.getVoteAverage());
-        details.setReleaseDate(basicMovie.getReleaseDate());
-        details.setFirstAirDate(basicMovie.getFirstAirDate());
+        details.setId(basicDetails.getId());
+        details.setTitle(basicDetails.getDisplayName());
+        details.setOverview(basicDetails.getOverview());
+        details.setPosterPath(basicDetails.getPosterPath());
+        details.setVoteAverage(basicDetails.getVoteAverage());
+        details.setReleaseDate(basicDetails.getReleaseDate());
+        details.setFirstAirDate(basicDetails.getFirstAirDate());
         details.setDirector(directorName);
         details.setCast(credits != null ? credits.getCast() : List.of());
         details.setWatchProviders(providers != null && providers.getResults() != null ? providers.getResults().get("BR") : null);
-        
         details.setTagline(tagline);
         details.setRuntime(runtime);
         details.setBudget(budget);
         details.setRevenue(revenue);
         details.setTrailerKey(trailerKey);
         details.setRecommendations(recommendations);
-
-        // --- ATUALIZAÇÃO: ENVIANDO PARA O FRONT ---
         details.setNumberOfSeasons(numberOfSeasons);
         details.setSeasons(seasons);
 
@@ -201,6 +188,6 @@ public class MovieService {
     }
 
     public SeasonDetailsDTO getSeasonEpisodes(Long seriesId, Integer seasonNumber) {
-    return tmdbClient.getSeasonDetails(seriesId, seasonNumber);
-}
+        return tmdbClient.getSeasonDetails(seriesId, seasonNumber);
+    }
 }
