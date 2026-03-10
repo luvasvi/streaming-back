@@ -18,5 +18,20 @@
     "name": "spring.h2.console.path",
     "type": "java.lang.String",
     "description": "A description for 'spring.h2.console.path'"
+  },
+  {
+    "name": "api.security.token.expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'api.security.token.expiration'"
+  },
+  {
+    "name": "api.security.token.expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'api.security.token.expiration'"
+  },
+  {
+    "name": "api.security.token.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'api.security.token.secret'"
   }
 ]}
